@@ -25,6 +25,7 @@ import com.tecsup.mibodega.ui.cliente.screens.entrega.DatosEntregaScreen
 import com.tecsup.mibodega.ui.cliente.screens.inicio.InicioScreen
 import com.tecsup.mibodega.ui.cliente.screens.login.LoginScreen
 import com.tecsup.mibodega.ui.cliente.screens.pedidos.PedidosScreen
+import com.tecsup.mibodega.ui.cliente.screens.perfil.PerfilScreen
 import com.tecsup.mibodega.ui.cliente.screens.registro.RegistroScreen
 import com.tecsup.mibodega.ui.componentes.DestinoBarra
 import com.tecsup.mibodega.ui.componentes.DialogoTerminos
@@ -39,6 +40,7 @@ private object Rutas {
     const val INICIO = "inicio"
     const val CATEGORIAS = "categorias"
     const val PEDIDOS = "pedidos"
+    const val PERFIL = "perfil"
     const val DETALLE = "detalle/{productoId}"
     const val CARRITO = "carrito"
     const val ENTREGA = "entrega"
@@ -63,13 +65,11 @@ fun ClienteApp() {
             DestinoBarra.INICIO -> Rutas.INICIO
             DestinoBarra.CATEGORIAS -> Rutas.CATEGORIAS
             DestinoBarra.PEDIDOS -> Rutas.PEDIDOS
-            DestinoBarra.PERFIL -> null
+            DestinoBarra.PERFIL -> Rutas.PERFIL
         }
-        if (ruta != null) {
-            navController.navigate(ruta) {
-                popUpTo(Rutas.INICIO)
-                launchSingleTop = true
-            }
+        navController.navigate(ruta) {
+            popUpTo(Rutas.INICIO)
+            launchSingleTop = true
         }
     }
 
@@ -146,6 +146,26 @@ fun ClienteApp() {
                 pedidos = pedidos,
                 cantidadCarrito = carrito.sumOf { it.cantidad },
                 onVerCarrito = { navController.navigate(Rutas.CARRITO) },
+                onNavegarBarra = navegarBarra
+            )
+        }
+
+        composable(Rutas.PERFIL) {
+            PerfilScreen(
+                datos = datosCliente,
+                cantidadPedidos = pedidos.size,
+                cantidadCarrito = carrito.sumOf { it.cantidad },
+                onVerCarrito = { navController.navigate(Rutas.CARRITO) },
+                onCerrarSesion = {
+                    carrito = emptyList()
+                    pedidos = emptyList()
+                    datosCliente = DatosCliente()
+                    numeroPedido = 1023
+                    totalPedido = 0.0
+                    navController.navigate(Rutas.BIENVENIDA) {
+                        popUpTo(navController.graph.id) { inclusive = true }
+                    }
+                },
                 onNavegarBarra = navegarBarra
             )
         }
