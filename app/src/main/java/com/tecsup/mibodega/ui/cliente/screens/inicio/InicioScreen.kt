@@ -80,6 +80,13 @@ fun InicioScreen(
         texto = textoBusqueda
     )
 
+    val hayFiltros = textoBusqueda.isNotBlank() || categoriaSeleccionada != listaCategorias.first()
+    val tituloLista = when {
+        !hayFiltros -> "Productos destacados"
+        productosFiltrados.size == 1 -> "1 producto encontrado"
+        else -> "${productosFiltrados.size} productos encontrados"
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -138,7 +145,7 @@ fun InicioScreen(
             )
 
             Text(
-                text = "Productos destacados",
+                text = tituloLista,
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(top = 20.dp, bottom = 4.dp)
             )
