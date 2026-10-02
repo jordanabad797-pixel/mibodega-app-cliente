@@ -1,5 +1,6 @@
 package com.tecsup.mibodega.ui.cliente.screens.perfil
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
@@ -27,12 +29,12 @@ import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -64,6 +66,7 @@ import com.tecsup.mibodega.ui.theme.VerdeBodega
 fun PerfilScreen(
     datos: DatosCliente,
     cantidadPedidos: Int,
+    cantidadFavoritos: Int,
     cantidadCarrito: Int,
     onVerCarrito: () -> Unit,
     onCerrarSesion: () -> Unit,
@@ -134,6 +137,7 @@ fun PerfilScreen(
                 FilaDato(Icons.Default.LocationOn, "Dirección de entrega", datos.direccion)
                 FilaDato(Icons.Default.Place, "Referencia", datos.referencia)
                 FilaDato(Icons.Default.Receipt, "Pedidos", cantidadPedidos.toString())
+                FilaDato(Icons.Default.Favorite, "Favoritos", cantidadFavoritos.toString())
             }
 
             Spacer(Modifier.height(24.dp))
@@ -142,7 +146,7 @@ fun PerfilScreen(
                 onClick = { mostrarConfirmacion = true },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, GrisBorde),
+                border = BorderStroke(1.dp, GrisBorde),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = RojoPrecio)
             ) {
                 Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null)
@@ -250,6 +254,7 @@ private fun PerfilPreview() {
                 referencia = "Frente al parque"
             ),
             cantidadPedidos = 2,
+            cantidadFavoritos = 3,
             cantidadCarrito = 0,
             onVerCarrito = {},
             onCerrarSesion = {},

@@ -55,6 +55,7 @@ fun ClienteApp() {
 
     var carrito by remember { mutableStateOf<List<ItemCarrito>>(emptyList()) }
     var pedidos by remember { mutableStateOf<List<Pedido>>(emptyList()) }
+    var favoritos by remember { mutableStateOf<Set<Int>>(emptySet()) }
     var datosCliente by remember { mutableStateOf(DatosCliente()) }
     var mostrarTerminos by remember { mutableStateOf(false) }
     var numeroPedido by remember { mutableStateOf(1023) }
@@ -154,11 +155,13 @@ fun ClienteApp() {
             PerfilScreen(
                 datos = datosCliente,
                 cantidadPedidos = pedidos.size,
+                cantidadFavoritos = favoritos.size,
                 cantidadCarrito = carrito.sumOf { it.cantidad },
                 onVerCarrito = { navController.navigate(Rutas.CARRITO) },
                 onCerrarSesion = {
                     carrito = emptyList()
                     pedidos = emptyList()
+                    favoritos = emptySet()
                     datosCliente = DatosCliente()
                     numeroPedido = 1023
                     totalPedido = 0.0
@@ -179,7 +182,15 @@ fun ClienteApp() {
 
             DetalleProductoScreen(
                 producto = producto,
+                esFavorito = producto.id in favoritos,
                 onVolver = { navController.popBackStack() },
+                onToggleFavorito = {
+                    favoritos = if (producto.id in favoritos) {
+                        favoritos - producto.id
+                    } else {
+                        favoritos + producto.id
+                    }
+                },
                 onAgregarAlCarrito = { productoSeleccionado, cantidad ->
                     carrito = agregarOSumarProducto(carrito, productoSeleccionado, cantidad)
                     navController.popBackStack()
