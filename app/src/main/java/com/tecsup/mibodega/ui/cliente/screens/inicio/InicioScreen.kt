@@ -44,6 +44,7 @@ import com.tecsup.mibodega.ui.cliente.modelo.listaProductosFake
 import com.tecsup.mibodega.ui.componentes.BarraInferiorCliente
 import com.tecsup.mibodega.ui.componentes.DestinoBarra
 import com.tecsup.mibodega.ui.componentes.ProductoCard
+import com.tecsup.mibodega.ui.theme.AzulTexto
 import com.tecsup.mibodega.ui.theme.BodegaTheme
 import com.tecsup.mibodega.ui.theme.GrisClaro
 import com.tecsup.mibodega.ui.theme.VerdeBodega
@@ -70,7 +71,7 @@ fun InicioScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Mi Bodega", fontWeight = FontWeight.Bold) },
+                title = { TituloMarca() },
                 actions = {
                     IconButton(onClick = onVerCarrito) {
                         BadgedBox(
@@ -141,7 +142,9 @@ fun InicioScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(vertical = 12.dp),
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
             ) {
                 items(productosFiltrados) { producto ->
                     ProductoCard(
@@ -152,6 +155,14 @@ fun InicioScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun TituloMarca() {
+    Row {
+        Text(text = "Mi ", fontWeight = FontWeight.Bold, color = AzulTexto)
+        Text(text = "Bodega", fontWeight = FontWeight.Bold, color = VerdeBodega)
     }
 }
 
