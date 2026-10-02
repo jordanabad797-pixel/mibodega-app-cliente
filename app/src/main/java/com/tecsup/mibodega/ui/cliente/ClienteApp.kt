@@ -10,6 +10,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.tecsup.mibodega.ui.cliente.modelo.DatosCliente
 import com.tecsup.mibodega.ui.cliente.modelo.ItemCarrito
 import com.tecsup.mibodega.ui.cliente.modelo.Producto
 import com.tecsup.mibodega.ui.cliente.modelo.listaProductosFake
@@ -22,6 +23,7 @@ import com.tecsup.mibodega.ui.cliente.screens.entrega.DatosEntregaScreen
 import com.tecsup.mibodega.ui.cliente.screens.inicio.InicioScreen
 import com.tecsup.mibodega.ui.cliente.screens.login.LoginScreen
 import com.tecsup.mibodega.ui.cliente.screens.registro.RegistroScreen
+import com.tecsup.mibodega.ui.componentes.DialogoTerminos
 
 private object Rutas {
     const val BIENVENIDA = "bienvenida"
@@ -41,6 +43,8 @@ fun ClienteApp() {
     val navController = rememberNavController()
 
     var carrito by remember { mutableStateOf<List<ItemCarrito>>(emptyList()) }
+    var datosCliente by remember { mutableStateOf(DatosCliente()) }
+    var mostrarTerminos by remember { mutableStateOf(false) }
     var numeroPedido by remember { mutableStateOf(1023) }
     var totalPedido by remember { mutableStateOf(0.0) }
 
@@ -52,7 +56,7 @@ fun ClienteApp() {
             BienvenidaScreen(
                 onRegistrarse = { navController.navigate(Rutas.REGISTRO) },
                 onIniciarSesion = { navController.navigate(Rutas.LOGIN) },
-                onTerminos = { /* TODO: abrir términos y condiciones */ }
+                onTerminos = { mostrarTerminos = true }
             )
         }
 
@@ -71,7 +75,12 @@ fun ClienteApp() {
             RegistroScreen(
                 onVolver = { navController.popBackStack() },
                 onCrearCuenta = { nombre, telefono, direccion, referencia ->
-                    // TODO: guardar estos datos cuando exista el registro real
+                    datosCliente = DatosCliente(
+                        nombre = nombre,
+                        telefono = telefono,
+                        direccion = direccion,
+                        referencia = referencia
+                    )
                     navController.navigate(Rutas.INICIO) {
                         popUpTo(Rutas.BIENVENIDA) { inclusive = true }
                     }
@@ -146,7 +155,11 @@ fun ClienteApp() {
                     navController.navigate(Rutas.CONFIRMACION) {
                         popUpTo(Rutas.INICIO)
                     }
-                }
+                },
+                nombreInicial = datosCliente.nombre,
+                telefonoInicial = datosCliente.telefono,
+                direccionInicial = datosCliente.direccion,
+                referenciaInicial = datosCliente.referencia
             )
         }
 
@@ -161,6 +174,10 @@ fun ClienteApp() {
                 }
             )
         }
+    }
+
+    if (mostrarTerminos) {
+        DialogoTerminos(onCerrar = { mostrarTerminos = false })
     }
 }
 
