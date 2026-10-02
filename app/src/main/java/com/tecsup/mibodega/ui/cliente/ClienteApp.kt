@@ -17,12 +17,14 @@ import com.tecsup.mibodega.ui.cliente.modelo.listaProductosFake
 import com.tecsup.mibodega.ui.cliente.screens.bienvenida.BienvenidaScreen
 import com.tecsup.mibodega.ui.cliente.screens.carrito.COSTO_DELIVERY
 import com.tecsup.mibodega.ui.cliente.screens.carrito.CarritoScreen
+import com.tecsup.mibodega.ui.cliente.screens.categorias.CategoriasScreen
 import com.tecsup.mibodega.ui.cliente.screens.confirmacion.ConfirmacionScreen
 import com.tecsup.mibodega.ui.cliente.screens.detalle.DetalleProductoScreen
 import com.tecsup.mibodega.ui.cliente.screens.entrega.DatosEntregaScreen
 import com.tecsup.mibodega.ui.cliente.screens.inicio.InicioScreen
 import com.tecsup.mibodega.ui.cliente.screens.login.LoginScreen
 import com.tecsup.mibodega.ui.cliente.screens.registro.RegistroScreen
+import com.tecsup.mibodega.ui.componentes.DestinoBarra
 import com.tecsup.mibodega.ui.componentes.DialogoTerminos
 
 private object Rutas {
@@ -30,6 +32,7 @@ private object Rutas {
     const val LOGIN = "login"
     const val REGISTRO = "registro"
     const val INICIO = "inicio"
+    const val CATEGORIAS = "categorias"
     const val DETALLE = "detalle/{productoId}"
     const val CARRITO = "carrito"
     const val ENTREGA = "entrega"
@@ -47,6 +50,21 @@ fun ClienteApp() {
     var mostrarTerminos by remember { mutableStateOf(false) }
     var numeroPedido by remember { mutableStateOf(1023) }
     var totalPedido by remember { mutableStateOf(0.0) }
+
+    val navegarBarra: (DestinoBarra) -> Unit = { destino ->
+        val ruta = when (destino) {
+            DestinoBarra.INICIO -> Rutas.INICIO
+            DestinoBarra.CATEGORIAS -> Rutas.CATEGORIAS
+            DestinoBarra.PEDIDOS -> null
+            DestinoBarra.PERFIL -> null
+        }
+        if (ruta != null) {
+            navController.navigate(ruta) {
+                popUpTo(Rutas.INICIO)
+                launchSingleTop = true
+            }
+        }
+    }
 
     NavHost(
         navController = navController,
@@ -97,7 +115,22 @@ fun ClienteApp() {
                 },
                 onAgregarProducto = { producto ->
                     carrito = agregarOSumarProducto(carrito, producto, 1)
-                }
+                },
+                onNavegarBarra = navegarBarra
+            )
+        }
+
+        composable(Rutas.CATEGORIAS) {
+            CategoriasScreen(
+                cantidadCarrito = carrito.sumOf { it.cantidad },
+                onVerCarrito = { navController.navigate(Rutas.CARRITO) },
+                onProductoClick = { producto ->
+                    navController.navigate(Rutas.detalle(producto.id))
+                },
+                onAgregarProducto = { producto ->
+                    carrito = agregarOSumarProducto(carrito, producto, 1)
+                },
+                onNavegarBarra = navegarBarra
             )
         }
 
