@@ -12,6 +12,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.tecsup.mibodega.ui.cliente.modelo.DatosCliente
 import com.tecsup.mibodega.ui.cliente.modelo.ItemCarrito
+import com.tecsup.mibodega.ui.cliente.modelo.Pedido
 import com.tecsup.mibodega.ui.cliente.modelo.Producto
 import com.tecsup.mibodega.ui.cliente.modelo.listaProductosFake
 import com.tecsup.mibodega.ui.cliente.screens.bienvenida.BienvenidaScreen
@@ -23,9 +24,13 @@ import com.tecsup.mibodega.ui.cliente.screens.detalle.DetalleProductoScreen
 import com.tecsup.mibodega.ui.cliente.screens.entrega.DatosEntregaScreen
 import com.tecsup.mibodega.ui.cliente.screens.inicio.InicioScreen
 import com.tecsup.mibodega.ui.cliente.screens.login.LoginScreen
+import com.tecsup.mibodega.ui.cliente.screens.pedidos.PedidosScreen
 import com.tecsup.mibodega.ui.cliente.screens.registro.RegistroScreen
 import com.tecsup.mibodega.ui.componentes.DestinoBarra
 import com.tecsup.mibodega.ui.componentes.DialogoTerminos
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 private object Rutas {
     const val BIENVENIDA = "bienvenida"
@@ -33,6 +38,7 @@ private object Rutas {
     const val REGISTRO = "registro"
     const val INICIO = "inicio"
     const val CATEGORIAS = "categorias"
+    const val PEDIDOS = "pedidos"
     const val DETALLE = "detalle/{productoId}"
     const val CARRITO = "carrito"
     const val ENTREGA = "entrega"
@@ -46,6 +52,7 @@ fun ClienteApp() {
     val navController = rememberNavController()
 
     var carrito by remember { mutableStateOf<List<ItemCarrito>>(emptyList()) }
+    var pedidos by remember { mutableStateOf<List<Pedido>>(emptyList()) }
     var datosCliente by remember { mutableStateOf(DatosCliente()) }
     var mostrarTerminos by remember { mutableStateOf(false) }
     var numeroPedido by remember { mutableStateOf(1023) }
@@ -55,7 +62,7 @@ fun ClienteApp() {
         val ruta = when (destino) {
             DestinoBarra.INICIO -> Rutas.INICIO
             DestinoBarra.CATEGORIAS -> Rutas.CATEGORIAS
-            DestinoBarra.PEDIDOS -> null
+            DestinoBarra.PEDIDOS -> Rutas.PEDIDOS
             DestinoBarra.PERFIL -> null
         }
         if (ruta != null) {
@@ -134,6 +141,15 @@ fun ClienteApp() {
             )
         }
 
+        composable(Rutas.PEDIDOS) {
+            PedidosScreen(
+                pedidos = pedidos,
+                cantidadCarrito = carrito.sumOf { it.cantidad },
+                onVerCarrito = { navController.navigate(Rutas.CARRITO) },
+                onNavegarBarra = navegarBarra
+            )
+        }
+
         composable(
             route = Rutas.DETALLE,
             arguments = listOf(navArgument("productoId") { type = NavType.IntType })
@@ -182,9 +198,15 @@ fun ClienteApp() {
             DatosEntregaScreen(
                 onVolver = { navController.popBackStack() },
                 onConfirmarPedido = {
-                    totalPedido = carrito.sumOf { it.producto.precio * it.cantidad } + COSTO_DELIVERY
-                    numeroPedido += 1
+                    val total = carrito.sumOf { it.producto.precio * it.cantidad } + COSTO_DELIVERY
+                    val nuevoNumero = numeroPedido + 1
+                    val fecha = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date())
+
+                    pedidos = listOf(Pedido(nuevoNumero, fecha, carrito, total)) + pedidos
+                    totalPedido = total
+                    numeroPedido = nuevoNumero
                     carrito = emptyList()
+
                     navController.navigate(Rutas.CONFIRMACION) {
                         popUpTo(Rutas.INICIO)
                     }
