@@ -3,6 +3,7 @@ package com.tecsup.mibodega.ui.cliente.screens.inicio
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -16,10 +17,14 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,6 +39,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -49,6 +55,12 @@ import com.tecsup.mibodega.ui.theme.BodegaTheme
 import com.tecsup.mibodega.ui.theme.GrisClaro
 import com.tecsup.mibodega.ui.theme.VerdeBodega
 
+private enum class OrdenPrecio(val etiqueta: String) {
+    NINGUNO("Sin ordenar"),
+    MENOR_A_MAYOR("Precio: menor a mayor"),
+    MAYOR_A_MENOR("Precio: mayor a menor")
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InicioScreen(
@@ -61,11 +73,19 @@ fun InicioScreen(
 ) {
     var categoriaSeleccionada by remember { mutableStateOf(listaCategorias.first()) }
     var textoBusqueda by remember { mutableStateOf("") }
+    var orden by remember { mutableStateOf(OrdenPrecio.NINGUNO) }
+    var menuOrdenAbierto by remember { mutableStateOf(false) }
 
     val productosFiltrados = productos.filter { producto ->
         val coincideCategoria = categoriaSeleccionada == "Todos" || producto.categoria == categoriaSeleccionada
         val coincideBusqueda = producto.nombre.contains(textoBusqueda, ignoreCase = true)
         coincideCategoria && coincideBusqueda
+    }
+
+    val productosVisibles = when (orden) {
+        OrdenPrecio.NINGUNO -> productosFiltrados
+        OrdenPrecio.MENOR_A_MAYOR -> productosFiltrados.sortedBy { it.precio }
+        OrdenPrecio.MAYOR_A_MENOR -> productosFiltrados.sortedByDescending { it.precio }
     }
 
     Scaffold(
@@ -118,11 +138,61 @@ fun InicioScreen(
                 )
             )
 
-            Text(
-                text = "Productos destacados",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(top = 20.dp, bottom = 4.dp)
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Productos destacados",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.weight(1f)
+                )
+
+                Box {
+                    IconButton(onClick = { menuOrdenAbierto = true }) {
+                        Icon(
+                            imageVector = Icons.Default.SwapVert,
+                            contentDescription = "Ordenar productos",
+                            tint = if (orden == OrdenPrecio.NINGUNO) {
+                                MaterialTheme.colorScheme.onSurface
+                            } else {
+                                VerdeBodega
+                            }
+                        )
+                    }
+
+                    DropdownMenu(
+                        expanded = menuOrdenAbierto,
+                        onDismissRequest = { menuOrdenAbierto = false }
+                    ) {
+                        OrdenPrecio.entries.forEach { opcion ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = opcion.etiqueta,
+                                        fontWeight = if (opcion == orden) FontWeight.Bold else FontWeight.Normal
+                                    )
+                                },
+                                trailingIcon = {
+                                    if (opcion == orden) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = null,
+                                            tint = VerdeBodega
+                                        )
+                                    }
+                                },
+                                onClick = {
+                                    orden = opcion
+                                    menuOrdenAbierto = false
+                                }
+                            )
+                        }
+                    }
+                }
+            }
 
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -146,7 +216,7 @@ fun InicioScreen(
                     .fillMaxWidth()
                     .weight(1f)
             ) {
-                items(productosFiltrados) { producto ->
+                items(productosVisibles) { producto ->
                     ProductoCard(
                         producto = producto,
                         onClick = { onProductoClick(producto) },
