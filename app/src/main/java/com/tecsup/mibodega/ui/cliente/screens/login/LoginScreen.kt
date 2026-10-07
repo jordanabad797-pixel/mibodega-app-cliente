@@ -8,10 +8,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -28,6 +32,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tecsup.mibodega.ui.componentes.BotonPrimario
@@ -35,19 +41,25 @@ import com.tecsup.mibodega.ui.theme.BodegaTheme
 import com.tecsup.mibodega.ui.theme.GrisBorde
 import com.tecsup.mibodega.ui.theme.GrisClaro
 import com.tecsup.mibodega.ui.theme.GrisTexto
+import com.tecsup.mibodega.ui.theme.RojoPrecio
 import com.tecsup.mibodega.ui.theme.VerdeBodega
 
-private const val LONGITUD_TELEFONO = 9
+private const val USUARIO_VALIDO = "cliente"
+private const val CLAVE_VALIDA = "1234"
 
 @Composable
 fun LoginScreen(
     onVolver: () -> Unit,
     onIngresar: () -> Unit
 ) {
-    var telefono by rememberSaveable { mutableStateOf("") }
-    var intentoIngresar by remember { mutableStateOf(false) }
+    var usuario by rememberSaveable { mutableStateOf("") }
+    var clave by rememberSaveable { mutableStateOf("") }
+    var verClave by rememberSaveable { mutableStateOf(false) }
+    var intento by remember { mutableStateOf(false) }
+    var credencialesIncorrectas by remember { mutableStateOf(false) }
 
-    val telefonoValido = telefono.length == LONGITUD_TELEFONO
+    val usuarioVacio = intento && usuario.isBlank()
+    val claveVacia = intento && clave.isBlank()
 
     Column(
         modifier = Modifier
@@ -59,6 +71,7 @@ fun LoginScreen(
         Column(
             modifier = Modifier
                 .weight(1f)
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp)
         ) {
             Text(
@@ -71,34 +84,74 @@ fun LoginScreen(
             Spacer(Modifier.height(8.dp))
 
             Text(
-                text = "Ingresa tu número de teléfono para continuar",
+                text = "Ingresa tu usuario y contraseña para continuar",
                 style = MaterialTheme.typography.bodyMedium,
                 color = GrisTexto
             )
 
             OutlinedTextField(
-                value = telefono,
-                onValueChange = { nuevoValor ->
-                    telefono = nuevoValor.filter { it.isDigit() }.take(LONGITUD_TELEFONO)
+                value = usuario,
+                onValueChange = {
+                    usuario = it
+                    credencialesIncorrectas = false
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 24.dp),
-                label = { Text("Teléfono") },
+                label = { Text("Usuario") },
                 singleLine = true,
-                isError = intentoIngresar && !telefonoValido,
-                supportingText = if (intentoIngresar && !telefonoValido) {
-                    { Text("Ingresa un teléfono de $LONGITUD_TELEFONO dígitos") }
+                isError = usuarioVacio || credencialesIncorrectas,
+                supportingText = if (usuarioVacio) {
+                    { Text("Campo obligatorio") }
                 } else null,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                 shape = RoundedCornerShape(12.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedContainerColor = GrisClaro,
-                    focusedContainerColor = GrisClaro,
-                    unfocusedBorderColor = GrisBorde,
-                    focusedBorderColor = VerdeBodega,
-                    focusedLabelColor = VerdeBodega
+                colors = coloresCampo()
+            )
+
+            OutlinedTextField(
+                value = clave,
+                onValueChange = {
+                    clave = it
+                    credencialesIncorrectas = false
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp),
+                label = { Text("Contraseña") },
+                singleLine = true,
+                isError = claveVacia || credencialesIncorrectas,
+                supportingText = if (claveVacia) {
+                    { Text("Campo obligatorio") }
+                } else null,
+                visualTransformation = if (verClave) VisualTransformation.None else PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                trailingIcon = {
+                    IconButton(onClick = { verClave = !verClave }) {
+                        Icon(
+                            imageVector = if (verClave) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            contentDescription = if (verClave) "Ocultar contraseña" else "Mostrar contraseña"
+                        )
+                    }
+                },
+                shape = RoundedCornerShape(12.dp),
+                colors = coloresCampo()
+            )
+
+            if (credencialesIncorrectas) {
+                Text(
+                    text = "Usuario o contraseña incorrectos",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = RojoPrecio,
+                    modifier = Modifier.padding(top = 12.dp)
                 )
+            }
+
+            Text(
+                text = "Usuario de prueba: $USUARIO_VALIDO · Contraseña: $CLAVE_VALIDA",
+                style = MaterialTheme.typography.bodySmall,
+                color = GrisTexto,
+                modifier = Modifier.padding(top = 20.dp)
             )
         }
 
@@ -106,13 +159,30 @@ fun LoginScreen(
             BotonPrimario(
                 texto = "Iniciar sesión",
                 onClick = {
-                    intentoIngresar = true
-                    if (telefonoValido) onIngresar()
+                    intento = true
+                    if (usuario.isNotBlank() && clave.isNotBlank()) {
+                        if (usuario.trim() == USUARIO_VALIDO && clave == CLAVE_VALIDA) {
+                            credencialesIncorrectas = false
+                            onIngresar()
+                        } else {
+                            credencialesIncorrectas = true
+                        }
+                    }
                 }
             )
         }
     }
 }
+
+@Composable
+private fun coloresCampo() = OutlinedTextFieldDefaults.colors(
+    unfocusedContainerColor = GrisClaro,
+    focusedContainerColor = GrisClaro,
+    errorContainerColor = GrisClaro,
+    unfocusedBorderColor = GrisBorde,
+    focusedBorderColor = VerdeBodega,
+    focusedLabelColor = VerdeBodega
+)
 
 @Composable
 private fun EncabezadoLogin(onVolver: () -> Unit) {
