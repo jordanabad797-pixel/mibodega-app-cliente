@@ -22,6 +22,7 @@ import com.tecsup.mibodega.ui.cliente.screens.categorias.CategoriasScreen
 import com.tecsup.mibodega.ui.cliente.screens.confirmacion.ConfirmacionScreen
 import com.tecsup.mibodega.ui.cliente.screens.detalle.DetalleProductoScreen
 import com.tecsup.mibodega.ui.cliente.screens.entrega.DatosEntregaScreen
+import com.tecsup.mibodega.ui.cliente.screens.favoritos.FavoritosScreen
 import com.tecsup.mibodega.ui.cliente.screens.inicio.InicioScreen
 import com.tecsup.mibodega.ui.cliente.screens.login.LoginScreen
 import com.tecsup.mibodega.ui.cliente.screens.pedidos.PedidosScreen
@@ -41,6 +42,7 @@ private object Rutas {
     const val CATEGORIAS = "categorias"
     const val PEDIDOS = "pedidos"
     const val PERFIL = "perfil"
+    const val FAVORITOS = "favoritos"
     const val DETALLE = "detalle/{productoId}"
     const val CARRITO = "carrito"
     const val ENTREGA = "entrega"
@@ -158,6 +160,7 @@ fun ClienteApp() {
                 cantidadFavoritos = favoritos.size,
                 cantidadCarrito = carrito.sumOf { it.cantidad },
                 onVerCarrito = { navController.navigate(Rutas.CARRITO) },
+                onVerFavoritos = { navController.navigate(Rutas.FAVORITOS) },
                 onCerrarSesion = {
                     carrito = emptyList()
                     pedidos = emptyList()
@@ -170,6 +173,19 @@ fun ClienteApp() {
                     }
                 },
                 onNavegarBarra = navegarBarra
+            )
+        }
+
+        composable(Rutas.FAVORITOS) {
+            FavoritosScreen(
+                productos = listaProductosFake.filter { it.id in favoritos },
+                onVolver = { navController.popBackStack() },
+                onProductoClick = { producto ->
+                    navController.navigate(Rutas.detalle(producto.id))
+                },
+                onAgregarProducto = { producto ->
+                    carrito = agregarOSumarProducto(carrito, producto, 1)
+                }
             )
         }
 

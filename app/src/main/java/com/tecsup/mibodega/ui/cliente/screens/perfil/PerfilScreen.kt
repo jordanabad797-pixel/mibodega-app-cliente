@@ -69,6 +69,7 @@ fun PerfilScreen(
     cantidadFavoritos: Int,
     cantidadCarrito: Int,
     onVerCarrito: () -> Unit,
+    onVerFavoritos: () -> Unit,
     onCerrarSesion: () -> Unit,
     onNavegarBarra: (DestinoBarra) -> Unit
 ) {
@@ -141,6 +142,20 @@ fun PerfilScreen(
             }
 
             Spacer(Modifier.height(24.dp))
+
+            OutlinedButton(
+                onClick = onVerFavoritos,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, VerdeBodega),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = VerdeBodega)
+            ) {
+                Icon(Icons.Default.Favorite, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text("Ver mis favoritos", fontWeight = FontWeight.Bold)
+            }
+
+            Spacer(Modifier.height(12.dp))
 
             OutlinedButton(
                 onClick = { mostrarConfirmacion = true },
@@ -257,6 +272,7 @@ private fun PerfilPreview() {
             cantidadFavoritos = 3,
             cantidadCarrito = 0,
             onVerCarrito = {},
+            onVerFavoritos = {},
             onCerrarSesion = {},
             onNavegarBarra = {}
         )
