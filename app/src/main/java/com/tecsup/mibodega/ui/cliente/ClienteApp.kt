@@ -1,10 +1,15 @@
 package com.tecsup.mibodega.ui.cliente
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -51,6 +56,20 @@ private object Rutas {
     fun detalle(productoId: Int) = "detalle/$productoId"
 }
 
+private val rutasConBarra = setOf(
+    Rutas.INICIO,
+    Rutas.CATEGORIAS,
+    Rutas.PEDIDOS,
+    Rutas.PERFIL
+)
+
+private const val DURACION_DESLIZAR = 300
+private const val DURACION_FUNDIDO = 250
+
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.entrePestanas(): Boolean =
+    initialState.destination.route in rutasConBarra &&
+            targetState.destination.route in rutasConBarra
+
 @Composable
 fun ClienteApp() {
     val navController = rememberNavController()
@@ -78,7 +97,47 @@ fun ClienteApp() {
 
     NavHost(
         navController = navController,
-        startDestination = Rutas.BIENVENIDA
+        startDestination = Rutas.BIENVENIDA,
+        enterTransition = {
+            if (entrePestanas()) {
+                fadeIn(animationSpec = tween(DURACION_FUNDIDO))
+            } else {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(DURACION_DESLIZAR)
+                )
+            }
+        },
+        exitTransition = {
+            if (entrePestanas()) {
+                fadeOut(animationSpec = tween(DURACION_FUNDIDO))
+            } else {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                    animationSpec = tween(DURACION_DESLIZAR)
+                )
+            }
+        },
+        popEnterTransition = {
+            if (entrePestanas()) {
+                fadeIn(animationSpec = tween(DURACION_FUNDIDO))
+            } else {
+                slideIntoContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(DURACION_DESLIZAR)
+                )
+            }
+        },
+        popExitTransition = {
+            if (entrePestanas()) {
+                fadeOut(animationSpec = tween(DURACION_FUNDIDO))
+            } else {
+                slideOutOfContainer(
+                    towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                    animationSpec = tween(DURACION_DESLIZAR)
+                )
+            }
+        }
     ) {
         composable(Rutas.BIENVENIDA) {
             BienvenidaScreen(
