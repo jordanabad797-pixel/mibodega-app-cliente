@@ -14,12 +14,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 
-/**
- * Input con label arriba (fuera del recuadro), como en los mockups
- * de Registro y Datos de entrega. Se usa en: Registro, Datos de entrega.
- *
- * @param teclado tipo de teclado, ej. KeyboardType.Phone para el teléfono
- */
 @Composable
 fun CampoTexto(
     etiqueta: String,
@@ -27,14 +21,17 @@ fun CampoTexto(
     onValorCambia: (String) -> Unit,
     modifier: Modifier = Modifier,
     placeholder: String? = null,
-    teclado: KeyboardType = KeyboardType.Text
+    teclado: KeyboardType = KeyboardType.Text,
+    mensajeError: String? = null
 ) {
+    val hayError = mensajeError != null
+
     Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = etiqueta,
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onBackground
+            color = if (hayError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onBackground
         )
         OutlinedTextField(
             value = valor,
@@ -43,11 +40,14 @@ fun CampoTexto(
                 .fillMaxWidth(),
             placeholder = placeholder?.let { { Text(it) } },
             singleLine = true,
+            isError = hayError,
+            supportingText = mensajeError?.let { { Text(it) } },
             shape = RoundedCornerShape(10.dp),
             keyboardOptions = KeyboardOptions(keyboardType = teclado),
             colors = OutlinedTextFieldDefaults.colors(
                 unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                 focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                errorContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                 unfocusedBorderColor = MaterialTheme.colorScheme.outline,
                 focusedBorderColor = MaterialTheme.colorScheme.primary
             )
