@@ -242,10 +242,13 @@ fun ClienteApp() {
         }
 
         composable(Rutas.ENTREGA) {
+            val subtotal = carrito.sumOf { it.producto.precio * it.cantidad }
+
             DatosEntregaScreen(
+                subtotal = subtotal,
                 onVolver = { navController.popBackStack() },
-                onConfirmarPedido = {
-                    val total = carrito.sumOf { it.producto.precio * it.cantidad } + COSTO_DELIVERY
+                onConfirmarPedido = { esDelivery ->
+                    val total = subtotal + if (esDelivery) COSTO_DELIVERY else 0.0
                     val nuevoNumero = numeroPedido + 1
                     val fecha = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date())
 

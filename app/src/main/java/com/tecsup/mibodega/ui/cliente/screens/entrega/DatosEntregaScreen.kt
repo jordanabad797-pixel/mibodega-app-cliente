@@ -1,10 +1,12 @@
 package com.tecsup.mibodega.ui.cliente.screens.entrega
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.width
@@ -15,6 +17,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -36,18 +39,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tecsup.mibodega.ui.cliente.screens.carrito.COSTO_DELIVERY
 import com.tecsup.mibodega.ui.componentes.BotonPrimario
 import com.tecsup.mibodega.ui.theme.BodegaTheme
 import com.tecsup.mibodega.ui.theme.GrisBorde
 import com.tecsup.mibodega.ui.theme.GrisClaro
+import com.tecsup.mibodega.ui.theme.GrisTexto
 import com.tecsup.mibodega.ui.theme.VerdeBodega
 
-private val metodosPago = listOf("Efectivo al entregar", "Yape", "Plin")
+private val metodosPago = listOf("Efectivo", "Yape", "Plin")
 
 @Composable
 fun DatosEntregaScreen(
+    subtotal: Double,
     onVolver: () -> Unit,
-    onConfirmarPedido: () -> Unit,
+    onConfirmarPedido: (Boolean) -> Unit,
     nombreInicial: String = "",
     telefonoInicial: String = "",
     direccionInicial: String = "",
@@ -57,12 +63,16 @@ fun DatosEntregaScreen(
     var telefono by rememberSaveable { mutableStateOf(telefonoInicial) }
     var direccion by rememberSaveable { mutableStateOf(direccionInicial) }
     var referencia by rememberSaveable { mutableStateOf(referenciaInicial) }
+    var esDelivery by rememberSaveable { mutableStateOf(true) }
     var metodoPago by rememberSaveable { mutableStateOf(metodosPago.first()) }
     var intentoConfirmar by remember { mutableStateOf(false) }
 
+    val costoEnvio = if (esDelivery) COSTO_DELIVERY else 0.0
+    val total = subtotal + costoEnvio
+
     val formularioValido = nombre.isNotBlank() &&
             telefono.isNotBlank() &&
-            direccion.isNotBlank()
+            (!esDelivery || direccion.isNotBlank())
 
     Column(
         modifier = Modifier
@@ -77,6 +87,26 @@ fun DatosEntregaScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp)
         ) {
+            Text(
+                text = "Modalidad de entrega",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(top = 12.dp, bottom = 4.dp)
+            )
+
+            FilaOpcion(
+                texto = "Delivery",
+                detalle = "+ S/ %.2f".format(COSTO_DELIVERY),
+                seleccionado = esDelivery,
+                onSeleccionar = { esDelivery = true }
+            )
+            FilaOpcion(
+                texto = "Recojo en tienda",
+                detalle = "Gratis",
+                seleccionado = !esDelivery,
+                onSeleccionar = { esDelivery = false }
+            )
+
             CampoEntrega(
                 etiqueta = "Nombre",
                 valor = nombre,
@@ -90,17 +120,20 @@ fun DatosEntregaScreen(
                 mostrarError = intentoConfirmar && telefono.isBlank(),
                 tipoTeclado = KeyboardType.Phone
             )
-            CampoEntrega(
-                etiqueta = "Dirección",
-                valor = direccion,
-                onCambio = { direccion = it },
-                mostrarError = intentoConfirmar && direccion.isBlank()
-            )
-            CampoEntrega(
-                etiqueta = "Referencia",
-                valor = referencia,
-                onCambio = { referencia = it }
-            )
+
+            if (esDelivery) {
+                CampoEntrega(
+                    etiqueta = "Dirección",
+                    valor = direccion,
+                    onCambio = { direccion = it },
+                    mostrarError = intentoConfirmar && direccion.isBlank()
+                )
+                CampoEntrega(
+                    etiqueta = "Referencia",
+                    valor = referencia,
+                    onCambio = { referencia = it }
+                )
+            }
 
             Text(
                 text = "Método de pago",
@@ -110,20 +143,50 @@ fun DatosEntregaScreen(
             )
 
             metodosPago.forEach { metodo ->
-                FilaMetodoPago(
+                FilaOpcion(
                     texto = metodo,
+                    detalle = null,
                     seleccionado = metodo == metodoPago,
                     onSeleccionar = { metodoPago = metodo }
                 )
             }
+
+            Spacer(Modifier.height(12.dp))
         }
 
         Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)) {
+            FilaTotal(etiqueta = "Subtotal", valor = "S/ %.2f".format(subtotal))
+            FilaTotal(
+                etiqueta = if (esDelivery) "Costo de delivery" else "Recojo en tienda",
+                valor = if (esDelivery) "S/ %.2f".format(costoEnvio) else "Gratis"
+            )
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Total",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "S/ %.2f".format(total),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = VerdeBodega
+                )
+            }
+
+            Spacer(Modifier.height(16.dp))
+
             BotonPrimario(
                 texto = "Confirmar pedido",
                 onClick = {
                     intentoConfirmar = true
-                    if (formularioValido) onConfirmarPedido()
+                    if (formularioValido) onConfirmarPedido(esDelivery)
                 }
             )
         }
@@ -174,6 +237,7 @@ private fun CampoEntrega(
         colors = OutlinedTextFieldDefaults.colors(
             unfocusedContainerColor = GrisClaro,
             focusedContainerColor = GrisClaro,
+            errorContainerColor = GrisClaro,
             unfocusedBorderColor = GrisBorde,
             focusedBorderColor = VerdeBodega,
             focusedLabelColor = VerdeBodega
@@ -182,8 +246,9 @@ private fun CampoEntrega(
 }
 
 @Composable
-private fun FilaMetodoPago(
+private fun FilaOpcion(
     texto: String,
+    detalle: String?,
     seleccionado: Boolean,
     onSeleccionar: () -> Unit
 ) {
@@ -204,7 +269,31 @@ private fun FilaMetodoPago(
             colors = RadioButtonDefaults.colors(selectedColor = VerdeBodega)
         )
         Spacer(Modifier.width(8.dp))
-        Text(text = texto, style = MaterialTheme.typography.bodyLarge)
+        Text(
+            text = texto,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.weight(1f)
+        )
+        if (detalle != null) {
+            Text(
+                text = detalle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = GrisTexto
+            )
+        }
+    }
+}
+
+@Composable
+private fun FilaTotal(etiqueta: String, valor: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 2.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(text = etiqueta, color = GrisTexto)
+        Text(text = valor, color = GrisTexto)
     }
 }
 
@@ -213,6 +302,7 @@ private fun FilaMetodoPago(
 private fun DatosEntregaPreview() {
     BodegaTheme {
         DatosEntregaScreen(
+            subtotal = 21.90,
             onVolver = {},
             onConfirmarPedido = {}
         )
